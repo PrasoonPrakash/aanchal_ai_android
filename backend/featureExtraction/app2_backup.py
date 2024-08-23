@@ -7,19 +7,13 @@ import assemblyai as aai
 import pickle
 import pandas as pd
 import numpy as np
-# from prompter import OpenAIPrompter
+from prompter import OpenAIPrompter
 import subprocess
 import time
 import csv
 import psutil
-import sys
 from werkzeug.utils import secure_filename
 from write import *
-
-#sys.path.insert(0,'/home/prasoon/breast_cancer_project/trial1/featureExtraction/feature_extraction/')
-
-from feature_extraction import featEx
-from transcription import transcribe
 
 app = Flask(__name__)
 #socketio=SocketIO(app)
@@ -31,19 +25,19 @@ if not os.path.exists(UPLOAD_FOLDER):
 #with open("randomForest.pkl","rb") as f:
  #   model=pickle.load(f)
 
-# model="gpt-3.5-turbo-0125"
-# prompter = OpenAIPrompter(model, max_tokens=16)
+model="gpt-3.5-turbo-0125"
+prompter = OpenAIPrompter(model, max_tokens=16)
 
-# feat_ids = [
-#       "AGE", "MARITAL STATUS", "MARRIAGE_DURATION",
-#       "EDUCATION", "OCCUPATION", "FAMILY TYPE", "RELIGION",
-#      # Medical
-#      # "PAST_SURGERY", # --> Missing
-#       "MENSTRUAL_STATUS",
-#       "TYPE OF MENOPAUSE(NATURAL/HYSTERECTOMY)", "PHYSICAL ACTIVITY",
-#       "ABORTION",
-#      "ABORTION_NO.",
-# ]
+feat_ids = [
+      "AGE", "MARITAL STATUS", "MARRIAGE_DURATION",
+      "EDUCATION", "OCCUPATION", "FAMILY TYPE", "RELIGION",
+     # Medical
+     # "PAST_SURGERY", # --> Missing
+      "MENSTRUAL_STATUS",
+      "TYPE OF MENOPAUSE(NATURAL/HYSTERECTOMY)", "PHYSICAL ACTIVITY",
+      "ABORTION",
+     "ABORTION_NO.",
+]
 
 name=None
 #ans=None
@@ -95,13 +89,13 @@ def upload_file():
         
         #print("hello")
         #emit_stage_update("Translating...")
-        #engPath=generateEnglish(hindiPath,name)
-        #print("Translation done")
+        engPath=generateEnglish(hindiPath,name)
+        print("Translation done")
         
         #check_memory_usage()
         #print("translation done")
         #emit_stage_update("Extracting features...")
-        csvPath=featureExtraction(name)
+        csvPath=featureExtraction(engPath,name)
         is_featEx=1
         #print("features extracted")
         #time.sleep(5)
@@ -132,34 +126,31 @@ def generateHindi(audio_file_path,name):
         return "/home/prasoon/breast_cancer_project/trial1/featureExtraction/hindiTranscripts/Pt.code_637_case_hindi.txt"
     else:
         try:
-            transcript = transcribe(audio_file_path)
-
-            # #aai.settings.api_key = "42906185b53b4fb180376d15b40d8f06"
-            # aai.settings.api_key = "e7965528d42e418fa3e74b523b235ee2"
-            # audio_url = audio_file_path
-            # print(audio_url)
-            # config = aai.TranscriptionConfig(language_code='hi')
-            # print(config)
-            # transcriber = aai.Transcriber(config=config)
-            # print(transcriber)
-            # transcript = transcriber.transcribe(audio_url)
-
+            #aai.settings.api_key = "42906185b53b4fb180376d15b40d8f06"
+            aai.settings.api_key = "e7965528d42e418fa3e74b523b235ee2"
+            audio_url = audio_file_path
+            print(audio_url)
+            config = aai.TranscriptionConfig(language_code='hi')
+            print(config)
+            transcriber = aai.Transcriber(config=config)
+            print(transcriber)
+            transcript = transcriber.transcribe(audio_url)
             print(transcript)
             hindiPath="/home/prasoon/breast_cancer_project/trial1/featureExtraction/hindiTranscripts/"+name+"_hindi.txt"
             print(hindiPath)
             #print(name)
             f1=open(hindiPath,'w')
             #prediction = model.predict(audio_url)
-            #text=transcript.text
-            f1.write(transcript)
-            #print(text)
+            text=transcript.text
+            f1.write(text)
+            print(text)
             #print("uploaded")
             is_transcripted=1
             return hindiPath
         except:
             return " "
 
-"""def generateEnglish(hindiPath,name):
+def generateEnglish(hindiPath,name):
     global is_translated
     if(name=="Pt.code_637_case"):
         engPath="/home/prasoon/breast_cancer_project/trial1/featureExtraction/translatedFiles/Pt.code_637_case_english.txt"
@@ -194,26 +185,20 @@ def generateHindi(audio_file_path,name):
         # Ensure the subprocess has finished
         
         #os.chdir("../featureExtraction")
-        #return engPath"""
+        #return engPath
 
-def featureExtraction(name):
-    global is_translated
-    global is_featEx
+def featureExtraction(engPath,name):
     if(name=="Pt.code_637_case"):
         #print("yyyy")
         csvPath="/home/prasoon/breast_cancer_project/trial1/featureExtraction/csvFiles/demo2.csv"
         return csvPath
     else:
-        #os.chdir("../featureExtraction")
+        os.chdir("../featureExtraction")
         #print("222"+os.getcwd())
         csvPath="/home/prasoon/breast_cancer_project/trial1/featureExtraction/csvFiles/"+name+"_data.csv"
         #engPath="translatedFiles/"+name+"_english.txt"
-
-        obj = featEx(name)
-        obj.extractFeatures()
-        is_translated=1
-        is_featEx=1
-        # process=subprocess.run(["python","run3new.py",name])
+        
+        process=subprocess.run(["python","run3new.py",name])
         #time.sleep(5)
         print("Features extracted")
         #process.wait()
