@@ -1,2 +1,0 @@
-1. conda activate indictrans
-2. cd IndicTrans2
