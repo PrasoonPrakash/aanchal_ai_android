@@ -1,4 +1,4 @@
-# aanchal_ai_webapp
+# aanchal_ai_android_app
 
 **Pre-requisites**
 
